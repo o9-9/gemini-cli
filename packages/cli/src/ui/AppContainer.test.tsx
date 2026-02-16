@@ -20,7 +20,6 @@ import { cleanup } from 'ink-testing-library';
 import { act, useContext, type ReactElement } from 'react';
 import { AppContainer } from './AppContainer.js';
 import { SettingsContext } from './contexts/SettingsContext.js';
-import { ToolCallStatus } from './types.js';
 import { type TrackedToolCall } from './hooks/useToolScheduler.js';
 import {
   type Config,
@@ -563,7 +562,7 @@ describe('AppContainer State Management', () => {
                 name: 'run_shell_command',
                 description: 'Run command',
                 resultDisplay: undefined,
-                status: ToolCallStatus.Confirming,
+                status: CoreToolCallStatus.AwaitingApproval,
                 confirmationDetails: {
                   type: 'exec',
                   title: 'Run shell command',
@@ -615,7 +614,7 @@ describe('AppContainer State Management', () => {
                 name: 'run_shell_command',
                 description: 'Run command',
                 resultDisplay: undefined,
-                status: ToolCallStatus.Confirming,
+                status: CoreToolCallStatus.AwaitingApproval,
                 confirmationDetails: {
                   type: 'exec',
                   title: 'Run shell command',
@@ -658,7 +657,7 @@ describe('AppContainer State Management', () => {
                 name: 'run_shell_command',
                 description: 'Run command',
                 resultDisplay: undefined,
-                status: ToolCallStatus.Confirming,
+                status: CoreToolCallStatus.AwaitingApproval,
                 confirmationDetails: {
                   type: 'exec',
                   title: 'Run shell command',
