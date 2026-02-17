@@ -410,10 +410,11 @@ describe('<ModelStatsDisplay />', () => {
     const output = lastFrame();
     expect(output).toContain('gemini-3-pro-');
     expect(output).toContain('gemini-3-flash-');
+    unmount();
   });
 
-  it('should display role breakdown correctly', () => {
-    const { lastFrame } = renderWithMockedStats({
+  it('should display role breakdown correctly', async () => {
+    const { lastFrame, unmount } = await renderWithMockedStats({
       models: {
         'gemini-2.5-pro': {
           api: { totalRequests: 2, totalErrors: 0, totalLatencyMs: 200 },
@@ -545,11 +546,11 @@ describe('<ModelStatsDisplay />', () => {
     unmount();
   });
 
-  it('should handle long role name layout', () => {
+  it('should handle long role name layout', async () => {
     // Use the longest valid role name to test layout
     const longRoleName = LlmRole.UTILITY_LOOP_DETECTOR;
 
-    const { lastFrame } = renderWithMockedStats({
+    const { lastFrame, unmount } = await renderWithMockedStats({
       models: {
         'gemini-2.5-pro': {
           api: { totalRequests: 1, totalErrors: 0, totalLatencyMs: 100 },
@@ -602,12 +603,13 @@ describe('<ModelStatsDisplay />', () => {
     const output = lastFrame();
     expect(output).toContain(longRoleName);
     expect(output).toMatchSnapshot();
+    unmount();
   });
 
-  it('should filter out invalid role names', () => {
+  it('should filter out invalid role names', async () => {
     const invalidRoleName =
       'this_is_a_very_long_role_name_that_should_be_wrapped' as LlmRole;
-    const { lastFrame } = renderWithMockedStats({
+    const { lastFrame, unmount } = await renderWithMockedStats({
       models: {
         'gemini-2.5-pro': {
           api: { totalRequests: 1, totalErrors: 0, totalLatencyMs: 100 },
@@ -660,5 +662,6 @@ describe('<ModelStatsDisplay />', () => {
     const output = lastFrame();
     expect(output).not.toContain(invalidRoleName);
     expect(output).toMatchSnapshot();
+    unmount();
   });
 });
