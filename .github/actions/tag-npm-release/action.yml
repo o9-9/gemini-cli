@@ -78,9 +78,12 @@ runs:
         ${{ inputs.dry-run != 'true' }}
       env:
         NODE_AUTH_TOKEN: '${{ steps.core-token.outputs.auth-token }}'
+        INPUTS_CORE_PACKAGE_NAME: ${{ inputs.core-package-name }}
+        INPUTS_VERSION: ${{ inputs.version }}
+        INPUTS_CHANNEL: ${{ inputs.channel }}
       shell: 'bash'
       run: |
-        npm dist-tag add ${{ inputs.core-package-name }}@${{ inputs.version }} ${{ inputs.channel }}
+        npm dist-tag add ${INPUTS_CORE_PACKAGE_NAME}@${INPUTS_VERSION} ${INPUTS_CHANNEL}
 
     - name: 'Get cli Token'
       uses: './.github/actions/npm-auth-token'
@@ -97,22 +100,32 @@ runs:
         ${{ inputs.dry-run != 'true' }}
       env:
         NODE_AUTH_TOKEN: '${{ steps.cli-token.outputs.auth-token }}'
+        INPUTS_CLI_PACKAGE_NAME: ${{ inputs.cli-package-name }}
+        INPUTS_VERSION: ${{ inputs.version }}
+        INPUTS_CHANNEL: ${{ inputs.channel }}
       shell: 'bash'
       run: |
-        npm dist-tag add ${{ inputs.cli-package-name }}@${{ inputs.version }} ${{ inputs.channel }}
+        npm dist-tag add ${INPUTS_CLI_PACKAGE_NAME}@${INPUTS_VERSION} ${INPUTS_CHANNEL}
 
     - name: 'Change tag for @google/gemini-cli-a2a-server'
       if: |-
         ${{ inputs.dry-run == 'false' }}
       env:
         NODE_AUTH_TOKEN: '${{ inputs.wombat-token-a2a-server }}'
+        INPUTS_VERSION: ${{ inputs.version }}
+        INPUTS_CHANNEL: ${{ inputs.channel }}
       shell: 'bash'
       run: |
-        npm dist-tag add @google/gemini-cli-a2a-server@${{ inputs.version }} ${{ inputs.channel }}
+        npm dist-tag add @google/gemini-cli-a2a-server@${INPUTS_VERSION} ${INPUTS_CHANNEL}
 
     - name: 'Log dry run'
       if: |-
         ${{ inputs.dry-run == 'true' }}
       shell: 'bash'
       run: |
-        echo "Dry run: Would have added tag '${{ inputs.channel }}' to version '${{ inputs.version }}' for @google/gemini-cli and @google/gemini-cli-core."
+        echo "Dry run: Would have added tag '${INPUTS_CHANNEL}' to version '${INPUTS_VERSION}' for @google/gemini-cli and @google/gemini-cli-core."
+
+      env:
+        INPUTS_CHANNEL: ${{ inputs.channel }}
+
+        INPUTS_VERSION: ${{ inputs.version }}
