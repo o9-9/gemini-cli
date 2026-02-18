@@ -1988,16 +1988,7 @@ export class Config {
 
   getPlanDirectory(): string {
     if (this.planDirectory) {
-      const resolvedPath = path.resolve(
-        this.getTargetDir(),
-        this.planDirectory,
-      );
-      if (isSubpath(this.getTargetDir(), resolvedPath)) {
-        return resolvedPath;
-      }
-      debugLogger.warn(
-        `Configured plan directory '${resolvedPath}' is outside the project root. Falling back to default temporary directory.`,
-      );
+      return path.resolve(this.getTargetDir(), this.planDirectory);
     }
     return this.storage.getProjectTempPlansDir();
   }
