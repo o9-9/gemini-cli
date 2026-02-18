@@ -48,6 +48,7 @@ import type {
   ToolCallResponseInfo,
   GeminiErrorEventValue,
   RetryAttemptPayload,
+  ChatCompressionInfo,
 } from '@google/gemini-cli-core';
 import { type Part, type PartListUnion, FinishReason } from '@google/genai';
 import type {
@@ -202,6 +203,9 @@ export const useGeminiStream = (
     useStateAndRef<ThoughtSummary | null>(null);
   const [pendingHistoryItem, pendingHistoryItemRef, setPendingHistoryItem] =
     useStateAndRef<HistoryItemWithoutId | null>(null);
+
+  const [isCompressing, setIsCompressing] = useState<boolean>(false);
+  const pendingCompressionStatsRef = useRef<ChatCompressionInfo | null>(null);
 
   const [lastGeminiActivityTime, setLastGeminiActivityTime] =
     useState<number>(0);
@@ -765,7 +769,11 @@ export const useGeminiStream = (
         if (pendingHistoryItemRef.current) {
           addItem(pendingHistoryItemRef.current, userMessageTimestamp);
         }
-        setPendingHistoryItem({ type: 'gemini', text: '' });
+        setPendingHistoryItem({
+          type: 'gemini',
+          text: '',
+          compression: pendingCompressionStatsRef.current ?? undefined,
+        });
         newGeminiMessageBuffer = eventValue;
       }
       // Split large messages for better rendering performance. Ideally,
@@ -773,11 +781,23 @@ export const useGeminiStream = (
       const splitPoint = findLastSafeSplitPoint(newGeminiMessageBuffer);
       if (splitPoint === newGeminiMessageBuffer.length) {
         // Update the existing message with accumulated content
-        setPendingHistoryItem((item) => ({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-          type: item?.type as 'gemini' | 'gemini_content',
-          text: newGeminiMessageBuffer,
-        }));
+        setPendingHistoryItem((item) => {
+          if (!item) return null;
+          if (item.type === 'gemini') {
+            return {
+              ...item,
+              type: 'gemini',
+              text: newGeminiMessageBuffer,
+            };
+          } else if (item.type === 'gemini_content') {
+            return {
+              ...item,
+              type: 'gemini_content',
+              text: newGeminiMessageBuffer,
+            };
+          }
+          return item;
+        });
       } else {
         // This indicates that we need to split up this Gemini Message.
         // Splitting a message is primarily a performance consideration. There is a
@@ -799,7 +819,11 @@ export const useGeminiStream = (
           },
           userMessageTimestamp,
         );
-        setPendingHistoryItem({ type: 'gemini_content', text: afterText });
+        setPendingHistoryItem({
+          type: 'gemini_content',
+          text: afterText,
+          compression: pendingCompressionStatsRef.current ?? undefined,
+        });
         newGeminiMessageBuffer = afterText;
       }
       return newGeminiMessageBuffer;
@@ -933,6 +957,8 @@ export const useGeminiStream = (
           'Response stopped because no image was generated.',
       };
 
+      pendingCompressionStatsRef.current = null;
+
       const message = finishReasonMessages[finishReason];
       if (message) {
         addItem(
@@ -948,24 +974,12 @@ export const useGeminiStream = (
   );
 
   const handleChatCompressionEvent = useCallback(
-    (
-      eventValue: ServerGeminiChatCompressedEvent['value'],
-      userMessageTimestamp: number,
-    ) => {
-      if (pendingHistoryItemRef.current) {
-        addItem(pendingHistoryItemRef.current, userMessageTimestamp);
-        setPendingHistoryItem(null);
+    (eventValue: ServerGeminiChatCompressedEvent['value']) => {
+      if (eventValue) {
+        pendingCompressionStatsRef.current = eventValue;
       }
-      return addItem({
-        type: 'info',
-        text:
-          `IMPORTANT: This conversation exceeded the compress threshold. ` +
-          `A compressed context will be sent for future messages (compressed from: ` +
-          `${eventValue?.originalTokenCount ?? 'unknown'} to ` +
-          `${eventValue?.newTokenCount ?? 'unknown'} tokens).`,
-      });
     },
-    [addItem, pendingHistoryItemRef, setPendingHistoryItem],
+    [pendingCompressionStatsRef],
   );
 
   const handleMaxSessionTurnsEvent = useCallback(
@@ -1095,6 +1109,10 @@ export const useGeminiStream = (
       let geminiMessageBuffer = '';
       const toolCallRequests: ToolCallRequestInfo[] = [];
       for await (const event of stream) {
+        if (event.type !== ServerGeminiEventType.ChatCompressing) {
+          setIsCompressing(false);
+        }
+
         if (
           event.type !== ServerGeminiEventType.Thought &&
           thoughtRef.current !== null
@@ -1140,8 +1158,12 @@ export const useGeminiStream = (
               event.value.contextCleared,
             );
             break;
+          case ServerGeminiEventType.ChatCompressing:
+            setIsCompressing(true);
+            break;
           case ServerGeminiEventType.ChatCompressed:
-            handleChatCompressionEvent(event.value, userMessageTimestamp);
+            setIsCompressing(false);
+            handleChatCompressionEvent(event.value);
             break;
           case ServerGeminiEventType.ToolCallConfirmation:
           case ServerGeminiEventType.ToolCallResponse:
@@ -1683,6 +1705,7 @@ export const useGeminiStream = (
 
   return {
     streamingState,
+    isCompressing,
     submitQuery,
     initError,
     pendingHistoryItems,

@@ -83,6 +83,7 @@ export const HistoryItemDisplay: React.FC<HistoryItemDisplayProps> = ({
             availableTerminalHeightGemini ?? availableTerminalHeight
           }
           terminalWidth={terminalWidth}
+          compression={itemForDisplay.compression}
         />
       )}
       {itemForDisplay.type === 'gemini_content' && (
@@ -93,6 +94,7 @@ export const HistoryItemDisplay: React.FC<HistoryItemDisplayProps> = ({
             availableTerminalHeightGemini ?? availableTerminalHeight
           }
           terminalWidth={terminalWidth}
+          compression={itemForDisplay.compression}
         />
       )}
       {itemForDisplay.type === 'info' && (

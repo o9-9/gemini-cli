@@ -12,12 +12,14 @@ import { theme } from '../../semantic-colors.js';
 import { SCREEN_READER_MODEL_PREFIX } from '../../textConstants.js';
 import { useUIState } from '../../contexts/UIStateContext.js';
 import { useAlternateBuffer } from '../../hooks/useAlternateBuffer.js';
+import type { ChatCompressionInfo } from '@google/gemini-cli-core';
 
 interface GeminiMessageProps {
   text: string;
   isPending: boolean;
   availableTerminalHeight?: number;
   terminalWidth: number;
+  compression?: ChatCompressionInfo;
 }
 
 export const GeminiMessage: React.FC<GeminiMessageProps> = ({
@@ -25,6 +27,7 @@ export const GeminiMessage: React.FC<GeminiMessageProps> = ({
   isPending,
   availableTerminalHeight,
   terminalWidth,
+  compression,
 }) => {
   const { renderMarkdown } = useUIState();
   const prefix = '✦ ';
@@ -58,6 +61,14 @@ export const GeminiMessage: React.FC<GeminiMessageProps> = ({
             constrainHeight={availableTerminalHeight !== undefined}
           />
         </Box>
+        {compression && !isPending && (
+          <Box marginTop={1}>
+            <Text dimColor>
+              (Context optimized: {compression.originalTokenCount} →{' '}
+              {compression.newTokenCount} tokens)
+            </Text>
+          </Box>
+        )}
       </Box>
     </Box>
   );

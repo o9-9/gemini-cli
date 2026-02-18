@@ -5,7 +5,8 @@
  */
 
 import type React from 'react';
-import { Box } from 'ink';
+import { Box, Text } from 'ink';
+import type { ChatCompressionInfo } from '@google/gemini-cli-core';
 import { MarkdownDisplay } from '../../utils/MarkdownDisplay.js';
 import { ShowMoreLines } from '../ShowMoreLines.js';
 import { useUIState } from '../../contexts/UIStateContext.js';
@@ -16,6 +17,7 @@ interface GeminiMessageContentProps {
   isPending: boolean;
   availableTerminalHeight?: number;
   terminalWidth: number;
+  compression?: ChatCompressionInfo;
 }
 
 /*
@@ -29,6 +31,7 @@ export const GeminiMessageContent: React.FC<GeminiMessageContentProps> = ({
   isPending,
   availableTerminalHeight,
   terminalWidth,
+  compression,
 }) => {
   const { renderMarkdown } = useUIState();
   const isAlternateBuffer = useAlternateBuffer();
@@ -56,6 +59,14 @@ export const GeminiMessageContent: React.FC<GeminiMessageContentProps> = ({
           constrainHeight={availableTerminalHeight !== undefined}
         />
       </Box>
+      {compression && !isPending && (
+        <Box marginTop={1}>
+          <Text dimColor>
+            (Context optimized: {compression.originalTokenCount} →{' '}
+            {compression.newTokenCount} tokens)
+          </Text>
+        </Box>
+      )}
     </Box>
   );
 };

@@ -6,6 +6,7 @@
 
 import {
   type CompressionStatus,
+  type ChatCompressionInfo,
   type GeminiCLIExtension,
   type MCPServerConfig,
   type ThoughtSummary,
@@ -134,11 +135,13 @@ export type HistoryItemUser = HistoryItemBase & {
 export type HistoryItemGemini = HistoryItemBase & {
   type: 'gemini';
   text: string;
+  compression?: ChatCompressionInfo;
 };
 
 export type HistoryItemGeminiContent = HistoryItemBase & {
   type: 'gemini_content';
   text: string;
+  compression?: ChatCompressionInfo;
 };
 
 export type HistoryItemInfo = HistoryItemBase & {
