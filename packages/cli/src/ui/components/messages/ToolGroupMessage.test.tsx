@@ -135,7 +135,7 @@ describe('<ToolGroupMessage />', () => {
       ];
       const item = createItem(toolCalls);
 
-      const { lastFrame, unmount, waitUntilReady} = renderWithProviders(
+      const { lastFrame, unmount, waitUntilReady } = renderWithProviders(
         <ToolGroupMessage {...baseProps} item={item} toolCalls={toolCalls} />,
         {
           config: baseMockConfig,
@@ -280,7 +280,7 @@ describe('<ToolGroupMessage />', () => {
       unmount();
     });
 
-    it('renders empty tool calls array', () => {
+    it('renders empty tool calls array', async () => {
       const toolCalls: IndividualToolCallDisplay[] = [];
       const item = createItem(toolCalls);
       const { lastFrame, unmount, waitUntilReady } = renderWithProviders(
@@ -351,7 +351,7 @@ describe('<ToolGroupMessage />', () => {
         }),
       ];
       const item = createItem(toolCalls);
-      const { lastFrame, unmount } = renderWithProviders(
+      const { lastFrame, unmount, waitUntilReady } = renderWithProviders(
         <ToolGroupMessage {...baseProps} item={item} toolCalls={toolCalls} />,
         {
           config: baseMockConfig,
@@ -650,20 +650,24 @@ describe('<ToolGroupMessage />', () => {
       },
       { name: READ_FILE_DISPLAY_NAME, mode: ApprovalMode.PLAN, visible: true },
       { name: GLOB_DISPLAY_NAME, mode: ApprovalMode.PLAN, visible: true },
-    ])('filtering logic for $name in $mode mode', ({ name, mode, visible }) => {
-      const toolCalls = [
-        createToolCall({
-          callId: 'test-call',
-          name,
-          approvalMode: mode,
-        }),
-      ];
-      const item = createItem(toolCalls);
+    ])(
+      'filtering logic for $name in $mode mode',
+      async ({ name, mode, visible }) => {
+        const toolCalls = [
+          createToolCall({
+            callId: 'test-call',
+            name,
+            approvalMode: mode,
+          }),
+        ];
+        const item = createItem(toolCalls);
 
-      const { lastFrame, unmount } = renderWithProviders(
-        <ToolGroupMessage {...baseProps} item={item} toolCalls={toolCalls} />,
-        { config: baseMockConfig },
-      );
+        const { lastFrame, unmount, waitUntilReady } = renderWithProviders(
+          <ToolGroupMessage {...baseProps} item={item} toolCalls={toolCalls} />,
+          { config: baseMockConfig },
+        );
+
+        await waitUntilReady();
 
         if (visible) {
           expect(lastFrame()).toContain(name);
